@@ -1,3 +1,5 @@
+import { processBitmap } from './processbitmap.js';
+
 const width = window.innerWidth;
 const height = window.innerHeight;
 
@@ -5,22 +7,13 @@ let keybindUp;
 let gameObjects = [];
 
 const TILE_SIZE = 50;
-const H = "hull"
-const F = "floor"
-const X = "empty"
-var solidTiles = [H]
-var tileMap = [
-    [H, H, H, H, H, H, H, H, H, H],
-    [H, F, F, F, F, F, F, F, F, H],
-    [H, F, F, F, F, F, F, F, F, H],
-    [H, F, F, F, F, F, F, F, F, H],
-    [H, F, F, F, F, F, F, F, F, H],
-    [H, F, F, F, F, F, F, F, F, H],
-    [H, F, F, F, F, F, F, F, F, H],
-    [H, F, F, F, F, F, F, F, F, H],
-    [H, F, F, F, F, F, F, F, F, H],
-    [H, H, H, H, H, H, H, H, H, H]
-];
+const H = "hull";
+const F = "floor";
+const X = "empty";
+var solidTiles = [H];
+
+let tileMap = await processBitmap("game/assets/bmptest.png");
+console.log(tileMap);
 
 
 class jssub extends Phaser.Scene {
@@ -74,6 +67,7 @@ class jssub extends Phaser.Scene {
 
     preload() {
         this.load.image('placeholder', 'game/assets/placeholder.png');
+        this.load.image('player1', 'game/assets/player1.png');
         this.load.image('hull', 'game/assets/hull_tile.png');
         this.load.image('floor', 'game/assets/floor_tile.png');
     }
@@ -82,12 +76,17 @@ class jssub extends Phaser.Scene {
         var x = 400;
         var y = 300;
 
+        console.log(processBitmap("game/assets/bmptest.bmp"));
+        
+
         this.drawLevel();
+
+    
 
         this.camera = this.cameras.main;
         this.camera.setZoom(1);
 
-        this.player1 = this.add.image(400, 400, 'placeholder');
+        this.player1 = this.add.image(400, 400, 'player1');
         this.playerspeed = 150
 
         this.keyUp = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
@@ -102,7 +101,6 @@ class jssub extends Phaser.Scene {
         if (this.keyUp.isDown && !this.keyDown.isDown) {
             let new_y = this.player1.y - this.playerspeed * (delta/1000)
             let tiles_touched = this.rectTouchingTiles(this.player1.x, new_y, this.player1.width, this.player1.height)
-            console.log(tiles_touched);
             if (!solidTiles.some(item => tiles_touched.includes(item))){
                 this.player1.setY(new_y);
             }
@@ -110,7 +108,6 @@ class jssub extends Phaser.Scene {
         if (this.keyDown.isDown && !this.keyUp.isDown) {
             let new_y = this.player1.y + this.playerspeed * (delta/1000)
             let tiles_touched = this.rectTouchingTiles(this.player1.x, new_y, this.player1.width, this.player1.height)
-            console.log(tiles_touched);
             if (!solidTiles.some(item => tiles_touched.includes(item))){
                 this.player1.setY(new_y);
             }
@@ -118,7 +115,6 @@ class jssub extends Phaser.Scene {
         if (this.keyRight.isDown && !this.keyLeft.isDown) {
             let new_x = this.player1.x + this.playerspeed * (delta/1000)
             let tiles_touched = this.rectTouchingTiles(new_x, this.player1.y, this.player1.width, this.player1.height)
-            console.log(tiles_touched);
             if (!solidTiles.some(item => tiles_touched.includes(item))){
                 this.player1.setX(new_x);
             }
@@ -126,7 +122,6 @@ class jssub extends Phaser.Scene {
         if ((this.keyLeft.isDown && !this.keyRight.isDown)) {
             let new_x = this.player1.x - this.playerspeed * (delta/1000)
             let tiles_touched = this.rectTouchingTiles(new_x, this.player1.y, this.player1.width, this.player1.height)
-            console.log(tiles_touched);
             if (!solidTiles.some(item => tiles_touched.includes(item))){
                 this.player1.setX(new_x);
             }
