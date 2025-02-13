@@ -94,7 +94,11 @@ class jssub extends Phaser.Scene {
         this.camera.setZoom(1);
 
         let player_position = tileToCoordinate([20, 9]);
+        let player_size_ratio = .55;
         this.player1 = this.physics.add.image(player_position[0], player_position[1], 'player1').setOrigin(0,0);
+        this.player1.setDisplaySize(TILE_SIZE*player_size_ratio, TILE_SIZE*player_size_ratio);
+        this.player1.width = TILE_SIZE*player_size_ratio;
+        this.player1.height = TILE_SIZE*player_size_ratio;
         this.playerspeed = 200;
 
         createDoorController(this, [19, 13], [TILE_SIZE, TILE_SIZE*2], [tileMap[19][14], tileMap[20][14]], tileTypeMap);

@@ -6,8 +6,8 @@ let win;
 function createWindow() {
     // Create the Electron window
     win = new BrowserWindow({
-        width: 800,
-        height: 600,
+        width: 1000,
+        height: 800,
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false, // Required to disable right-click and devtools
