@@ -8,6 +8,7 @@ function createWindow() {
     win = new BrowserWindow({
         width: 1000,
         height: 800,
+        icon: 'game/assets/placeholder.png',
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false, // Required to disable right-click and devtools
