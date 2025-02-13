@@ -1,5 +1,5 @@
 import { processBitmap } from './processbitmap.js';
-import { toggleDoors } from './interactable.js';
+import { createDoorController, createDoorControllers, toggleDoors } from './interactable.js';
 
 const width = window.innerWidth;
 const height = window.innerHeight;
@@ -12,9 +12,13 @@ const H = 'hull';
 const F = 'floor';
 const X = 'empty';
 const D = 'door-closed'
-var solidTiles = [H];
+const d = 'door-open'
+var solidTiles = [H, D];
+var door_types = [D, d];
 
 let tileTypeMap = await processBitmap('game/assets/bmptest.bmp');
+
+let tileMap;
 
 
 export function coordinateToTile(coordinate){
@@ -22,12 +26,9 @@ export function coordinateToTile(coordinate){
 }
 
 export function tileToCoordinate(tile){
-    return [(tile[1] * TILE_SIZE), (tile[0] * TILE_SIZE)-TILE_SIZE]
+    return [(tile[1] * TILE_SIZE), (tile[0] * TILE_SIZE)]
 }
 
-function bing(){
-    console.log("bing")
-}
 
 class jssub extends Phaser.Scene {
 
@@ -36,40 +37,40 @@ class jssub extends Phaser.Scene {
         let top_right = [x+width, y];
         let bottom_left = [x, y+height];
         let bottom_right = [x+width, y+height];
-        let tiles_touched = [];
+        let tile_types_touched = [];
         try {
             let tile_index = coordinateToTile(top_left); 
-            tiles_touched.push(this.tileTypeMap[tile_index[0]][tile_index[1]]);
+            tile_types_touched.push(tileTypeMap[tile_index[0]][tile_index[1]]);
         } catch(error){console.log(error);}
         try {
             let tile_index = coordinateToTile(top_right); 
-            tiles_touched.push(this.tileTypeMap[tile_index[0]][tile_index[1]]);
+            tile_types_touched.push(tileTypeMap[tile_index[0]][tile_index[1]]);
         } catch(error){console.log(error);}
         try {
             let tile_index = coordinateToTile(bottom_left); 
-            tiles_touched.push(this.tileTypeMap[tile_index[0]][tile_index[1]]);
+            tile_types_touched.push(tileTypeMap[tile_index[0]][tile_index[1]]);
         } catch(error){console.log(error);}
         try {
             let tile_index = coordinateToTile(bottom_right); 
-            tiles_touched.push(this.tileTypeMap[tile_index[0]][tile_index[1]]);
+            tile_types_touched.push(tileTypeMap[tile_index[0]][tile_index[1]]);
         } catch(error){console.log(error);}
-        return tiles_types_touched;
+        return tile_types_touched;
     }
 
     drawLevel() {
         tileMap = [];
         for(let row = 0; row < tileTypeMap.length; row++){
-            tileRow = [];
+            let tileRow = [];
             for(let col = 0; col < tileTypeMap[0].length; col++){
                 let tileType = tileTypeMap[row][col];
-                if(tileType == 'empty'){
-                    continue;
-                }
+                // if(tileType == 'empty'){
+                //     continue;
+                // }
                 let tile = this.add.image(col * TILE_SIZE, row * TILE_SIZE, tileType).setOrigin(0,0);
                 tile.setDisplaySize(TILE_SIZE, TILE_SIZE);
                 tileRow.push(tile);
             }
-            tileMap.push(row);
+            tileMap.push(tileRow);
         }
         return tileMap;
     }
@@ -81,12 +82,13 @@ class jssub extends Phaser.Scene {
         this.load.image('floor', 'game/assets/floor_tile.png');
         this.load.image('door-closed', 'game/assets/door_closed_tile.png');
         this.load.image('door-open', 'game/assets/door_open_tile.png');
+        this.load.image('empty', 'game/assets/empty_tile.png');
     }
 
     create() {
         this.physics.world.setBounds(0, 0, width, height);
 
-        this.tileMap = this.drawLevel();
+        tileMap = this.drawLevel();
         
         this.camera = this.cameras.main;
         this.camera.setZoom(1);
@@ -95,27 +97,20 @@ class jssub extends Phaser.Scene {
         this.player1 = this.physics.add.image(player_position[0], player_position[1], 'player1').setOrigin(0,0);
         this.playerspeed = 200;
 
-        let control_pos = tileToCoordinate([20, 13]);
-        this.doorcontroller1 = this.physics.add.image(control_pos[0], control_pos[1], 'placeholder').setOrigin(0,0);
+        createDoorController(this, [19, 13], [TILE_SIZE, TILE_SIZE*2], [tileMap[19][14], tileMap[20][14]], tileTypeMap);
+        createDoorController(this, [19, 15], [TILE_SIZE, TILE_SIZE*2], [tileMap[19][14], tileMap[20][14]], tileTypeMap);
+
+        createDoorControllers(this, [[9, 18], [11, 18]], [TILE_SIZE*2, TILE_SIZE], [tileMap[10][18], tileMap[10][19]], tileTypeMap);
+        
+        createDoorControllers(this, [[19, 22], [19, 24]], [TILE_SIZE, TILE_SIZE*2], [tileMap[19][23], tileMap[20][23]], tileTypeMap);
+
 
         this.keyUp = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
         this.keyDown = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
         this.keyRight = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
         this.keyLeft = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
         this.keyInteract = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
-
-        this.physics.add.overlap(
-            this.player1, 
-            this.doorcontroller1, 
-            null,
-            () => {
-                if (Phaser.Input.Keyboard.JustDown(this.keyInteract)){
-                    let test = toggleDoors([tileMap[19][14], tileMap[20][14]], tileMap)
-                    console.log("trigger");
-                    tileMap = test;
-                }
-            }
-        );
+        this.keyDebug = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P);
     }
     
     update(time, delta) {
@@ -124,29 +119,37 @@ class jssub extends Phaser.Scene {
         if (this.keyUp.isDown && !this.keyDown.isDown) {
             let new_y = this.player1.y - this.playerspeed * (delta/1000)
             let tile_types_touched = this.rectTouchingTileType(this.player1.x, new_y, this.player1.width, this.player1.height)
-            if (!solidTiles.some(item => tiles_touched.includes(item))){
+            if (!solidTiles.some(item => tile_types_touched.includes(item))){
                 this.player1.setY(new_y);
             }
         }
         if (this.keyDown.isDown && !this.keyUp.isDown) {
             let new_y = this.player1.y + this.playerspeed * (delta/1000)
-            let tiles_touched = this.rectTouchingTileType(this.player1.x, new_y, this.player1.width, this.player1.height)
-            if (!solidTiles.some(item => tiles_touched.includes(item))){
+            let tile_types_touched = this.rectTouchingTileType(this.player1.x, new_y, this.player1.width, this.player1.height)
+            if (!solidTiles.some(item => tile_types_touched.includes(item))){
                 this.player1.setY(new_y);
             }
         }
         if (this.keyRight.isDown && !this.keyLeft.isDown) {
             let new_x = this.player1.x + this.playerspeed * (delta/1000)
-            let tiles_touched = this.rectTouchingTileType(new_x, this.player1.y, this.player1.width, this.player1.height)
-            if (!solidTiles.some(item => tiles_touched.includes(item))){
+            let tile_types_touched = this.rectTouchingTileType(new_x, this.player1.y, this.player1.width, this.player1.height)
+            if (!solidTiles.some(item => tile_types_touched.includes(item))){
                 this.player1.setX(new_x);
             }
         }
         if ((this.keyLeft.isDown && !this.keyRight.isDown)) {
             let new_x = this.player1.x - this.playerspeed * (delta/1000)
-            let tiles_touched = this.rectTouchingTileType(new_x, this.player1.y, this.player1.width, this.player1.height)
-            if (!solidTiles.some(item => tiles_touched.includes(item))){
+            let tile_types_touched = this.rectTouchingTileType(new_x, this.player1.y, this.player1.width, this.player1.height)
+            if (!solidTiles.some(item => tile_types_touched.includes(item))){
                 this.player1.setX(new_x);
+            }
+        }
+        if(Phaser.Input.Keyboard.JustDown(this.keyDebug)){
+            if(!this.physics.world.drawDebug){
+                this.physics.world.drawDebug = true;
+            } else {
+                this.physics.world.drawDebug = false;
+                this.physics.world.debugGraphic.clear();
             }
         }
     }
