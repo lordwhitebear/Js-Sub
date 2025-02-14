@@ -4,9 +4,6 @@ import { createDoorController, createDoorControllers, toggleDoors } from './inte
 const width = window.innerWidth;
 const height = window.innerHeight;
 
-let keybindUp;
-let gameObjects = [];
-
 const TILE_SIZE = width/14;
 const H = 'hull';
 const F = 'floor';
@@ -14,10 +11,10 @@ const X = 'empty';
 const D = 'door-closed'
 const d = 'door-open'
 var solidTiles = [H, D];
-var door_types = [D, d];
 
-let tileTypeMap = await processBitmap('game/assets/bmptest.bmp');
+let playersubmap = await processBitmap('game/assets/bmptest.bmp');
 
+let tileTypeMap;
 let tileMap;
 
 
@@ -30,7 +27,7 @@ export function tileToCoordinate(tile){
 }
 
 
-class jssub extends Phaser.Scene {
+class playersub extends Phaser.Scene {
 
     rectTouchingTileType(x, y, width, height){
         let top_left = [x, y];
@@ -75,6 +72,10 @@ class jssub extends Phaser.Scene {
         return tileMap;
     }
 
+    constructor() {
+        super("playersub");
+    }
+
     preload() {
         this.load.image('placeholder', 'game/assets/placeholder.png');
         this.load.image('player1', 'game/assets/player1.png');
@@ -88,6 +89,7 @@ class jssub extends Phaser.Scene {
     create() {
         this.physics.world.setBounds(0, 0, width, height);
 
+        tileTypeMap = playersubmap;
         tileMap = this.drawLevel();
         
         this.camera = this.cameras.main;
@@ -115,6 +117,7 @@ class jssub extends Phaser.Scene {
         this.keyLeft = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
         this.keyInteract = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
         this.keyDebug = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.P);
+        this.keyTemp = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.L);
     }
     
     update(time, delta) {
@@ -156,7 +159,65 @@ class jssub extends Phaser.Scene {
                 this.physics.world.debugGraphic.clear();
             }
         }
+        if(Phaser.Input.Keyboard.JustDown(this.keyTemp)){
+            this.scene.start("outside");
+        }
     }
+}
+
+class outside extends Phaser.Scene {
+
+    constructor() {
+        super("outside");
+    }
+
+    preload ()
+    {
+        this.load.image('placeholder', 'game/assets/placeholder.png');
+    }
+
+    create ()
+    {
+        this.camera = this.cameras.main;
+        this.camera.setZoom(1);
+
+        this.playersub = this.physics.add.sprite(400, 300, 'placeholder');
+        this.playersub.setVelocity(0, 0);
+        this.playersub.setDamping(true);
+        this.playersub.setDrag(.3);
+
+        this.playersub_speed = .5;
+
+        this.playersub_soundmult = 1;
+        this.playersub_sound = this.physics.add.sprite(200, 300, null).setCircle(25);
+
+        let temp = this.add.image(500, 300, 'placeholder');
+
+        this.keyUp = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
+        this.keyDown = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
+        this.keyRight = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
+        this.keyLeft = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
+    }
+
+    update(time, delta) {
+        this.camera.centerOn(this.playersub.x, this.playersub.y);
+        let direction = new Phaser.Math.Vector2();
+        if (this.keyUp.isDown && !this.keyDown.isDown) {
+            direction.y = -1;
+        }
+        if (this.keyDown.isDown && !this.keyUp.isDown) {
+            direction.y = 1
+        }
+        if (this.keyRight.isDown && !this.keyLeft.isDown) {
+            direction.x = 1
+        }
+        if (this.keyLeft.isDown && !this.keyRight.isDown) {
+            direction.x = -1
+        }
+        direction.normalize();
+        this.playersub.setVelocity(this.playersub.body.velocity.x+(direction.x * this.playersub_speed), this.playersub.body.velocity.y+(direction.y * this.playersub_speed));
+    }
+
 }
 
 const config = {
@@ -167,7 +228,7 @@ const config = {
         default: 'arcade',
         arcade: {debug: true}
     },
-    scene: jssub
+    scene: [playersub, outside]
 };
 
 const game = new Phaser.Game(config);
