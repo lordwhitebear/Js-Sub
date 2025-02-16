@@ -121,7 +121,6 @@ class playersub extends Phaser.Scene {
     }
     
     update(time, delta) {
-        this.camera.centerOn(this.player1.x, this.player1.y);
         // Game loop logic
         if (this.keyUp.isDown && !this.keyDown.isDown) {
             let new_y = this.player1.y - this.playerspeed * (delta/1000)
@@ -162,6 +161,7 @@ class playersub extends Phaser.Scene {
         if(Phaser.Input.Keyboard.JustDown(this.keyTemp)){
             this.scene.start("outside");
         }
+        this.camera.centerOn(this.player1.x, this.player1.y);
     }
 }
 
@@ -186,7 +186,7 @@ class outside extends Phaser.Scene {
         this.playersub.setDamping(true);
         this.playersub.setDrag(.3);
 
-        this.playersub_speed = .5;
+        this.playersub_speed = 50;
 
         this.playersub_soundmult = 1;
         this.playersub_sound = this.physics.add.sprite(200, 300, null).setCircle(25);
@@ -215,7 +215,7 @@ class outside extends Phaser.Scene {
             direction.x = -1
         }
         direction.normalize();
-        this.playersub.setVelocity(this.playersub.body.velocity.x+(direction.x * this.playersub_speed), this.playersub.body.velocity.y+(direction.y * this.playersub_speed));
+        this.playersub.setVelocity(this.playersub.body.velocity.x+(direction.x * this.playersub_speed * (delta/1000)), this.playersub.body.velocity.y+(direction.y * this.playersub_speed * (delta/1000)));
     }
 
 }
