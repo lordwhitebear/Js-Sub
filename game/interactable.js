@@ -1,4 +1,4 @@
-import { coordinateToTile, tileToCoordinate } from './game.js';
+import { coordinateToTile, tileToCoordinate, rectTouchingTileType } from './game.js';
 
 
 export function createDoorControllers(self, positions, scale, doors, tileTypeMap){
@@ -23,7 +23,7 @@ export function createDoorController(self, position, scale, doors, tileTypeMap){
         doorcontroller, 
         null,
         () => {
-            let tile_types_touched = self.rectTouchingTileType(self.player1.x, self.player1.y, self.player1.width, self.player1.height);
+            let tile_types_touched = rectTouchingTileType(self.player1.x, self.player1.y, self.player1.width, self.player1.height);
             if (Phaser.Input.Keyboard.JustDown(self.keyInteract) && !door_types.some(item => tile_types_touched.includes(item))){
                 tileTypeMap = toggleDoors(doors, tileTypeMap)
             }
