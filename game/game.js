@@ -85,8 +85,9 @@ class jssub extends Phaser.Scene {
 
         const playersubdirectory = ref(database, "/scenes/" + user["username"] + "-sub");
         set(playersubdirectory, {
-            boom: "hi"
+            player: "hi"
         }) 
+        const playerdirectory = ref(database, "/scenes/" + user["username"] + "-sub");
 
         get(scenes).then((snapshot) => {
             if (snapshot.exists()) {
