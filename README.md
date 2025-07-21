@@ -4,5 +4,5 @@ JS Sub is a networked multi-player submarine game, inspired by Barotrauma with a
 <ul>
   <li>Google's Firiebase Realtime Database for networking</li>
   <li>Node.JS & Electron for local Javascript interpreting</li>
-  <li>Phaser.JS for physics and rendering</li>
+  <li>Phaser.JS Game Engine</li>
 </ul>
